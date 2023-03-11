@@ -2,8 +2,6 @@
 const LINE_ACCESS_TOKEN = '';
 const OPENAI_APIKEY = '';
 const SHEET_ID = '';
-const SYSTEM_TEXT = '';
-const WELCOME_MESSAGE = 'あなたの指示に従って、AIが画像を作ります。\nまずは、以下のメッセージを「タップ」してお試しください！\n10秒ほどで画像を生成します。';
 
 // 以降は全環境で統一
 const DALLE2_URL = 'https://api.openai.com/v1/images/generations';
@@ -11,6 +9,7 @@ const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
 const QUESTION_NUM = 10;
 const USAGE_LIMIT = 100;
 const MAX_LENGTH_INPUT = 1000;
+const WELCOME_MESSAGE = '入力されたフレーズをもとに、AIが画像を生成します。\nまずは以下のメッセージを「タップ」してお試しください！\n10秒ほどで画像が生成されます。';
 const sheet = SpreadsheetApp.openById(SHEET_ID);
 const historySheet = sheet.getSheetByName("history");
 const questionsSheet = sheet.getSheetByName("questions");
