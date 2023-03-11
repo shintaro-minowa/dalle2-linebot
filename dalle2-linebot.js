@@ -76,8 +76,11 @@ function doPost(e) {
     userMessage = userMessage.substring(0, MAX_LENGTH_INPUT);
 
     // 日本語から英語に翻訳
-    const translatedMessage = LanguageApp.translate(userMessage, 'ja', 'en');
+    let translatedMessage = LanguageApp.translate(userMessage, 'ja', 'en');
     Logger.log('translatedMessage: ' + translatedMessage);
+
+    // 翻訳されたメッセージを MAX_LENGTH_INPUT の値で切り捨て
+    translatedMessage = translatedMessage.substring(0, MAX_LENGTH_INPUT);
 
     // DALL·E 2 APIを呼び出すためのリクエストを送信する
     const imageUrl = generateImage(translatedMessage);
