@@ -121,11 +121,7 @@ function generateImage(text) {
         "Authorization": "Bearer " + OPENAI_APIKEY
       },
       "payload": JSON.stringify({
-        "prompt": text,
-        "model": "image-alpha-001",
-        "num_images": 1,
-        "size": "1024x1024",
-        "response_format": "url"
+        "prompt": text
       })
     };
     // リクエストを送信する
