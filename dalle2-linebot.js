@@ -6,7 +6,7 @@ const SHEET_ID = '';
 // 以降は全環境で統一
 const DALLE2_URL = 'https://api.openai.com/v1/images/generations';
 const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
-const QUESTION_NUM = 10;
+const QUESTION_NUM = 3;
 const USAGE_LIMIT = 100;
 const MAX_LENGTH_INPUT = 1000;
 const WELCOME_MESSAGE = '入力されたフレーズをもとに、AIが画像を生成します。\nまずは以下のメッセージを「タップ」してお試しください！\n10秒ほどで画像が生成されます。';
@@ -89,7 +89,7 @@ function doPost(e) {
       return;
     }
     // 画像生成の履歴を保存
-    saveHistory(userId, userMessage, imageUrl);
+    saveHistory(userId, userMessage, translatedMessage, imageUrl);
 
     // ユーザに画像を送信
     replyImage(replyToken, imageUrl);
@@ -141,7 +141,7 @@ function generateImage(text) {
   }
 }
 
-function saveHistory(userId, userMessage, imageUrl) {
+function saveHistory(userId, userMessage, translatedMessage, imageUrl) {
   const lastRow = historySheet.getLastRow();
   // 現在日時を取得
   const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
@@ -149,8 +149,9 @@ function saveHistory(userId, userMessage, imageUrl) {
   // スプレッドシートに最新の会話を出力
   historySheet.getRange(lastRow + 1, 1).setValue(userId);
   historySheet.getRange(lastRow + 1, 2).setValue(userMessage);
-  historySheet.getRange(lastRow + 1, 3).setValue(imageUrl);
-  historySheet.getRange(lastRow + 1, 4).setValue(now);
+  historySheet.getRange(lastRow + 1, 3).setValue(translatedMessage);
+  historySheet.getRange(lastRow + 1, 4).setValue(imageUrl);
+  historySheet.getRange(lastRow + 1, 5).setValue(now);
 }
 
 function replyMessage(replyToken, text) {
@@ -182,7 +183,7 @@ function replyMessage(replyToken, text) {
 
 function replyImage(replyToken, imageUrl) {
   // quickReplyの選択肢を取得
-  const quickReplyOptions = getQuickReplyOptions();
+  const quickReplyOptions = getRandomPhraseQuickReplyOptions();
 
   const payload = {
     'replyToken': replyToken,
@@ -208,27 +209,31 @@ function replyImage(replyToken, imageUrl) {
   return ContentService.createTextOutput(JSON.stringify({ 'content': 'post ok' })).setMimeType(ContentService.MimeType.JSON);
 }
 
-// 質問例を取得する
-function getQuickReplyOptions() {
+// 画像生成フレーズの例を取得する
+function getRandomPhraseQuickReplyOptions() {
   // LINE Developers クイックリプライを使う
   // https://developers.line.biz/ja/docs/messaging-api/using-quick-reply/
-  const dataRange = questionsSheet.getDataRange();
-  let values = dataRange.getValues();
 
-  values.shift(); // ヘッダーを配列から取り出す
-  let items = []; // 質問例を格納する配列
+  let items = []; // 画像生成フレーズ例を格納する配列
 
-  for (let i = 0; i < values.length; i++) {
-    const row = values[i];
-    if (row.join("") === "") {
-      continue; // 空行の場合はスキップする
-    }
+  for (let i = 0; i < QUESTION_NUM; i++) {
+    const place = getRandomQuestionValue('場所');
+    const verb = getRandomQuestionValue('動詞');
+    const noun = getRandomQuestionValue('名詞');
+    const style = getRandomQuestionValue('スタイル');
+
+    const label = place + 'で' + verb + noun + 'の' + style;
+    const phrase = place + 'で' + verb + noun + 'の' + style;
+
+    Logger.log('label: ' + label);
+    Logger.log('phrase: ' + phrase);
+
     const obj = {
       type: "action",
       action: {
         type: "message",
-        label: row[0].substr(0, 20), // label: 最大文字数：20
-        text: row[1].substr(0, 300) // text: 最大文字数：300
+        label: shortenString(label, 20), // label: 最大文字数：20
+        text: phrase.substr(0, 300) // text: 最大文字数：300
       }
     };
     items.push(obj); // 空行でない場合はオブジェクトを作成して配列に追加する
@@ -238,12 +243,16 @@ function getQuickReplyOptions() {
     return undefined; // ヘッダー以外の値がない場合はundefinedを返す
   }
 
-  shuffle(items); // 質問例をシャッフルする
-  items = items.slice(0, QUESTION_NUM); // 質問例の数を定数QUESTION_NUMで指定された数に制限する
-
   return {
     "items": items
   };
+}
+
+function shortenString(str, maxLength) {
+  if (str.length > maxLength) {
+    str = str.slice(0, 19) + '…';
+  }
+  return str;
 }
 
 function shuffle(array) {
@@ -277,4 +286,22 @@ function saveErrorLog(text) {
   const lastRow = errorLogSheet.getLastRow();
   // スプレッドシートにログを出力
   errorLogSheet.getRange(lastRow + 1, 1).setValue(text);
+}
+
+function getRandomQuestionValue(header) {
+  return getRandomValueFromColumn(header, 'questions', SHEET_ID);
+}
+
+function getRandomValueFromColumn(header, sheetName, spreadsheetId) {
+  var sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName(sheetName);
+  var data = sheet.getDataRange().getValues();
+  var headerRow = data[0];
+  var columnIndex = headerRow.indexOf(header);
+  var columnData = data.slice(1).map(function (row) {
+    return row[columnIndex];
+  }).filter(function (value) {
+    return value !== '';
+  });
+  var randomIndex = Math.floor(Math.random() * columnData.length);
+  return columnData[randomIndex];
 }
