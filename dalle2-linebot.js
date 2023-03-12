@@ -85,7 +85,7 @@ function doPost(e) {
     const imageUrl = generateImage(translatedMessage);
 
     if (!imageUrl) {
-      replyMessage(replyToken, '画像を生成できませんでした。しばらく待ってから再度お試しください。');
+      replyMessage(replyToken, '画像を生成できませんでした。別のフレーズを入力するか、しばらく待ってから再度お試しください。');
       return;
     }
     // 画像生成の履歴を保存
