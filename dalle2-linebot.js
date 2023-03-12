@@ -269,7 +269,7 @@ function isOverUsageLimit(userId) {
   const now = new Date(); // 現在時刻を取得
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24時間前の時刻を計算
   const userRows = data.filter(function (row) {
-    return row[0] === userId && new Date(row[3]) >= oneDayAgo; // 24時間以内のデータをフィルタリング
+    return row[0] === userId && new Date(row[4]) >= oneDayAgo; // 24時間以内のデータをフィルタリング
   });
   Logger.log('userRows.length: ' + userRows.length);
   Logger.log('USAGE_LIMIT: ' + USAGE_LIMIT);
