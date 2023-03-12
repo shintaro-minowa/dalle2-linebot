@@ -156,7 +156,7 @@ function saveHistory(userId, userMessage, translatedMessage, imageUrl) {
 
 function replyMessage(replyToken, text) {
   // quickReplyの選択肢を取得
-  const quickReplyOptions = getQuickReplyOptions();
+  const quickReplyOptions = getRandomPhraseQuickReplyOptions();
 
   const payload = {
     'replyToken': replyToken,
